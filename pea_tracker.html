@@ -6,368 +6,456 @@
 <title>Mon PEA Tracker</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f5f5f0; color: #1a1a1a; min-height: 100vh; padding: 1rem; }
-  .app { max-width: 440px; margin: 0 auto; }
-  h1 { font-size: 18px; font-weight: 600; margin-bottom: 1.25rem; color: #1a1a1a; }
-  .tabs { display: flex; gap: 4px; background: #e8e8e3; border-radius: 99px; padding: 4px; margin-bottom: 1.25rem; }
-  .tab { flex: 1; padding: 7px 4px; font-size: 12px; font-weight: 500; font-family: inherit; border: none; border-radius: 99px; cursor: pointer; background: transparent; color: #777; transition: all 0.15s; }
-  .tab.active { background: #1a1a1a; color: #fff; }
-  .page { display: none; }
-  .page.active { display: block; }
-  .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1.25rem; }
-  .metric { background: #fff; border-radius: 10px; padding: 12px 14px; border: 1px solid #e8e8e3; }
-  .metric-label { font-size: 11px; color: #888; margin-bottom: 4px; }
-  .metric-value { font-size: 18px; font-weight: 600; color: #1a1a1a; }
-  .metric-value.green { color: #1D9E75; }
-  .card { background: #fff; border: 1px solid #e8e8e3; border-radius: 14px; overflow: hidden; margin-bottom: 1.25rem; }
-  .card-header { padding: 10px 14px; font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.05em; background: #f9f9f7; border-bottom: 1px solid #e8e8e3; }
-  .etf-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid #f0f0ec; }
-  .etf-row:last-child { border-bottom: none; }
-  .etf-name { font-size: 13px; font-weight: 500; }
-  .etf-sub { font-size: 11px; color: #888; margin-top: 2px; }
-  .etf-val { font-size: 14px; font-weight: 600; text-align: right; }
-  .etf-gain { font-size: 11px; color: #1D9E75; text-align: right; }
-  .badge { display: inline-block; font-size: 10px; padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
-  .badge-green { background: #E1F5EE; color: #0F6E56; }
-  .badge-gray { background: #f0f0ec; color: #888; }
-  .saisie-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid #f0f0ec; }
-  .saisie-row:last-child { border-bottom: none; }
-  .saisie-label { flex: 1; font-size: 13px; font-weight: 500; }
-  input[type=number] { width: 90px; padding: 6px 10px; font-size: 13px; font-family: inherit; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; color: #1a1a1a; outline: none; }
-  input[type=number]:focus { border-color: #1a1a1a; background: #fff; }
-  .unit { font-size: 12px; color: #888; }
-  .btn-primary { width: 100%; padding: 12px; font-size: 14px; font-weight: 600; font-family: inherit; border: none; border-radius: 10px; cursor: pointer; background: #1a1a1a; color: #fff; margin-top: 1rem; transition: background 0.2s; }
-  .btn-primary:hover { background: #333; }
-  .btn-primary.success { background: #1D9E75; }
-  .hist-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-bottom: 1px solid #f0f0ec; }
-  .hist-row:last-child { border-bottom: none; }
-  .hist-label { font-size: 13px; font-weight: 500; }
-  .hist-sub { font-size: 11px; color: #888; margin-top: 2px; }
-  .hist-val { font-size: 15px; font-weight: 600; text-align: right; }
-  .hist-sub2 { font-size: 11px; color: #888; text-align: right; }
-  .empty { text-align: center; padding: 2rem; color: #888; font-size: 14px; }
-  .proj-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; padding: 8px 14px; font-size: 11px; font-weight: 600; color: #888; background: #f9f9f7; border-bottom: 1px solid #e8e8e3; }
-  .proj-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; padding: 9px 14px; border-bottom: 1px solid #f0f0ec; font-size: 13px; }
-  .proj-row:last-child { border-bottom: none; }
-  .legend { display: flex; gap: 16px; justify-content: center; margin-top: 8px; font-size: 11px; color: #888; }
-  .info-box { background: #E1F5EE; border-radius: 10px; padding: 10px 14px; font-size: 12px; color: #0F6E56; margin-bottom: 1rem; }
-  .versement-row { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid #e8e8e3; border-radius: 10px; padding: 10px 14px; margin-bottom: 1rem; }
-  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1.25rem; }
-  .btn-secondary { padding: 10px; font-size: 13px; font-weight: 500; font-family: inherit; border: 1px solid #e8e8e3; border-radius: 10px; cursor: pointer; background: #fff; color: #1a1a1a; transition: background 0.15s; }
-  .btn-secondary:hover { background: #f5f5f0; }
-  .btn-danger { padding: 10px; font-size: 13px; font-weight: 500; font-family: inherit; border: 1px solid #fdd; border-radius: 10px; cursor: pointer; background: #fff8f8; color: #c0392b; transition: background 0.15s; }
-  .btn-danger:hover { background: #fdecea; }
-  .import-area { display: none; margin-bottom: 1rem; }
-  .import-area textarea { width: 100%; height: 80px; padding: 10px; font-size: 12px; font-family: monospace; border: 1px solid #ddd; border-radius: 8px; resize: none; background: #fafafa; color: #1a1a1a; }
-  .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); background: #1a1a1a; color: #fff; padding: 10px 20px; border-radius: 99px; font-size: 13px; font-weight: 500; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 999; }
-  .toast.show { opacity: 1; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f5f5f0; color: #1a1a1a; min-height: 100vh; padding: 1rem; }
+.app { max-width: 440px; margin: 0 auto; }
+h1 { font-size: 18px; font-weight: 600; margin-bottom: 1.25rem; }
+.tabs { display: flex; gap: 3px; background: #e8e8e3; border-radius: 99px; padding: 4px; margin-bottom: 1.25rem; }
+.tab { flex: 1; padding: 7px 2px; font-size: 11px; font-weight: 500; font-family: inherit; border: none; border-radius: 99px; cursor: pointer; background: transparent; color: #777; transition: all 0.15s; text-align: center; }
+.tab.active { background: #1a1a1a; color: #fff; }
+.page { display: none; }
+.page.active { display: block; }
+.metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1.25rem; }
+.metric { background: #fff; border-radius: 10px; padding: 12px 14px; border: 1px solid #e8e8e3; }
+.metric-label { font-size: 11px; color: #888; margin-bottom: 4px; }
+.metric-value { font-size: 18px; font-weight: 600; }
+.green { color: #1D9E75; }
+.red { color: #E24B4A; }
+.card { background: #fff; border: 1px solid #e8e8e3; border-radius: 14px; overflow: hidden; margin-bottom: 1.25rem; }
+.card-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.05em; background: #f9f9f7; border-bottom: 1px solid #e8e8e3; }
+.row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid #f0f0ec; }
+.row:last-child { border-bottom: none; }
+.badge { display: inline-block; font-size: 10px; padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
+.badge-g { background: #E1F5EE; color: #0F6E56; }
+.badge-gray { background: #f0f0ec; color: #888; }
+input[type=number] { width: 85px; padding: 6px 8px; font-size: 13px; font-family: inherit; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; color: #1a1a1a; outline: none; }
+input[type=number]:focus { border-color: #1a1a1a; background: #fff; }
+textarea { width: 100%; padding: 8px; font-size: 12px; font-family: inherit; border: 1px solid #ddd; border-radius: 8px; resize: none; background: #fafafa; color: #1a1a1a; outline: none; }
+.unit { font-size: 12px; color: #888; }
+.btn { width: 100%; padding: 12px; font-size: 14px; font-weight: 600; font-family: inherit; border: none; border-radius: 10px; cursor: pointer; background: #1a1a1a; color: #fff; margin-top: 1rem; transition: background 0.2s; }
+.btn:hover { background: #333; }
+.btn.ok { background: #1D9E75; }
+.btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1.25rem; }
+.btn2 { padding: 10px; font-size: 13px; font-weight: 500; font-family: inherit; border: 1px solid #e8e8e3; border-radius: 10px; cursor: pointer; background: #fff; color: #1a1a1a; }
+.btn2:hover { background: #f5f5f0; }
+.btndanger { padding: 10px; font-size: 13px; font-weight: 500; font-family: inherit; border: 1px solid #fdd; border-radius: 10px; cursor: pointer; background: #fff8f8; color: #c0392b; width: 100%; }
+.btndanger:hover { background: #fdecea; }
+.btn-sm { font-size: 11px; padding: 4px 10px; border: 1px solid #ddd; border-radius: 99px; background: #fff; cursor: pointer; font-family: inherit; color: #555; }
+.btn-sm:hover { background: #f5f5f0; }
+.btn-live { font-size: 11px; padding: 4px 10px; border: 1px solid #1D9E75; border-radius: 99px; background: #E1F5EE; cursor: pointer; font-family: inherit; color: #0F6E56; }
+.btn-live:hover { background: #c5edd9; }
+.import-area { display: none; margin-bottom: 1rem; }
+.toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); background: #1a1a1a; color: #fff; padding: 10px 20px; border-radius: 99px; font-size: 13px; font-weight: 500; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 999; white-space: nowrap; }
+.toast.show { opacity: 1; }
+.infobox { background: #E1F5EE; border-radius: 10px; padding: 10px 14px; font-size: 12px; color: #0F6E56; margin-bottom: 1rem; }
+.warnbox { background: #FFF8E1; border-radius: 10px; padding: 10px 14px; font-size: 12px; color: #856404; margin-bottom: 1rem; display: none; }
+.rappel { background: #FFF3CD; border: 1px solid #FFD700; border-radius: 10px; padding: 10px 14px; font-size: 12px; color: #856404; margin-bottom: 1rem; display: none; }
+.empty { text-align: center; padding: 2rem; color: #888; font-size: 14px; }
+.legend { display: flex; gap: 12px; justify-content: center; margin-top: 8px; font-size: 11px; color: #888; flex-wrap: wrap; }
+.pie-legend { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 12px; }
+.pie-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #555; }
+.pie-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.del-btn { font-size: 11px; color: #ccc; cursor: pointer; padding: 4px 6px; border: none; background: none; font-family: inherit; }
+.del-btn:hover { color: #E24B4A; }
 </style>
 </head>
 <body>
 <div class="app">
   <h1>📈 Mon PEA Tracker</h1>
+  <div id="rappel" class="rappel">📅 Tu n'as pas encore fait ta saisie ce mois-ci !</div>
 
   <div class="tabs">
-    <button class="tab active" onclick="showTab('accueil')">Accueil</button>
-    <button class="tab" onclick="showTab('saisie')">Saisie</button>
-    <button class="tab" onclick="showTab('historique')">Historique</button>
-    <button class="tab" onclick="showTab('projection')">Projection</button>
+    <button class="tab active" onclick="goTab('accueil',this)">Accueil</button>
+    <button class="tab" onclick="goTab('cours',this)">Cours</button>
+    <button class="tab" onclick="goTab('saisie',this)">Saisie</button>
+    <button class="tab" onclick="goTab('historique',this)">Historique</button>
+    <button class="tab" onclick="goTab('projection',this)">Projection</button>
   </div>
 
   <!-- ACCUEIL -->
   <div class="page active" id="tab-accueil">
     <div class="metric-grid">
-      <div class="metric"><div class="metric-label">Investi total</div><div class="metric-value" id="m-investi">260 €</div></div>
-      <div class="metric"><div class="metric-label">Valeur estimée</div><div class="metric-value green" id="m-valeur">259,96 €</div></div>
-      <div class="metric"><div class="metric-label">+/- latente</div><div class="metric-value green" id="m-pnl">+10,77 €</div></div>
-      <div class="metric"><div class="metric-label">Perf. globale</div><div class="metric-value green" id="m-perf">+4,3 %</div></div>
+      <div class="metric"><div class="metric-label">Investi total</div><div class="metric-value" id="m-investi">—</div></div>
+      <div class="metric"><div class="metric-label">Valeur estimée</div><div class="metric-value" id="m-valeur">—</div></div>
+      <div class="metric"><div class="metric-label">+/- latente</div><div class="metric-value" id="m-pnl">—</div></div>
+      <div class="metric"><div class="metric-label">Perf. globale</div><div class="metric-value" id="m-perf">—</div></div>
     </div>
-
     <div class="card">
-      <div class="card-header">Mes ETF</div>
+      <div class="card-header"><span>Mes ETF</span></div>
       <div id="etf-list"></div>
     </div>
-
     <div class="card">
-      <div class="card-header">Répartition cible — 100 €/mois</div>
-      <div class="etf-row"><span class="etf-name">Amundi MSCI World</span><span class="etf-val">60 €</span></div>
-      <div class="etf-row"><span class="etf-name">Easy Stoxx Europe 600</span><span class="etf-val">25 €</span></div>
-      <div class="etf-row"><span class="etf-name">Amundi Emergent ESG</span><span class="etf-val">15 €</span></div>
+      <div class="card-header"><span>Répartition du portefeuille</span></div>
+      <div style="position:relative;height:200px;padding:12px;"><canvas id="pieChart" role="img" aria-label="Répartition portefeuille"></canvas></div>
+      <div class="pie-legend" id="pie-legend"></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span>Cible mensuelle — 100 €/mois</span></div>
+      <div class="row"><span style="font-size:13px;font-weight:500;">Amundi MSCI World</span><span style="font-size:14px;font-weight:600;">60 €</span></div>
+      <div class="row"><span style="font-size:13px;font-weight:500;">Easy Stoxx Europe 600</span><span style="font-size:14px;font-weight:600;">25 €</span></div>
+      <div class="row"><span style="font-size:13px;font-weight:500;">Amundi Emergent ESG</span><span style="font-size:14px;font-weight:600;">15 €</span></div>
+    </div>
+  </div>
+
+  <!-- COURS -->
+  <div class="page" id="tab-cours">
+    <div class="card">
+      <div class="card-header"><span id="cours-title">Cours (différé 15 min)</span><button class="btn-sm" onclick="fetchCours()">Actualiser</button></div>
+      <div id="cours-list"><div class="empty" style="padding:1rem;">Chargement...</div></div>
+      <div style="padding:8px 14px 10px;font-size:11px;color:#aaa;">Yahoo Finance via proxy public · différé 15 min</div>
     </div>
   </div>
 
   <!-- SAISIE -->
   <div class="page" id="tab-saisie">
-    <div class="info-box" id="saisie-month"></div>
+    <div class="infobox" id="saisie-month"></div>
+    <div class="warnbox" id="saisie-warn"></div>
     <div class="card" id="saisie-inputs"></div>
-    <div class="versement-row">
-      <span class="saisie-label" style="font-weight:500;font-size:13px;">Versement ce mois</span>
-      <input type="number" id="in-versement" value="100" step="1" min="0">
-      <span class="unit">€</span>
+    <div style="background:#fff;border:1px solid #e8e8e3;border-radius:10px;padding:10px 14px;margin-bottom:1rem;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="flex:1;font-size:13px;font-weight:500;">Versement ce mois</span>
+        <input type="number" id="in-versement" value="100" step="1" min="0">
+        <span class="unit">€</span>
+      </div>
     </div>
-    <button class="btn-primary" id="btn-save" onclick="saveMonth()">Enregistrer ce mois</button>
+    <div style="background:#fff;border:1px solid #e8e8e3;border-radius:10px;padding:10px 14px;margin-bottom:0;">
+      <div style="font-size:13px;font-weight:500;margin-bottom:6px;">Notes (optionnel)</div>
+      <textarea id="in-notes" rows="2" placeholder="Ex: marché volatile, achat supplémentaire..."></textarea>
+    </div>
+    <button class="btn" id="btn-save" onclick="saveMonth()">Enregistrer ce mois</button>
   </div>
 
   <!-- HISTORIQUE -->
   <div class="page" id="tab-historique">
     <div class="btn-row">
-      <button class="btn-secondary" onclick="exportData()">⬇ Exporter JSON</button>
-      <button class="btn-secondary" onclick="toggleImport()">⬆ Importer JSON</button>
+      <button class="btn2" onclick="exportData()">⬇ Exporter JSON</button>
+      <button class="btn2" onclick="toggleImport()">⬆ Importer JSON</button>
     </div>
     <div class="import-area" id="import-area">
-      <textarea id="import-text" placeholder="Colle ici le contenu de ton fichier JSON exporté..."></textarea>
-      <button class="btn-primary" style="margin-top:6px;" onclick="importData()">Importer les données</button>
+      <textarea id="import-text" rows="3" placeholder="Colle ici le contenu du fichier JSON exporté..."></textarea>
+      <button class="btn" style="margin-top:6px;" onclick="importData()">Importer les données</button>
+    </div>
+    <div class="card" style="margin-bottom:0.75rem;">
+      <div class="card-header"><span>Évolution du portefeuille</span></div>
+      <div id="hist-chart-container" style="position:relative;height:180px;padding:12px;">
+        <canvas id="histChart" role="img" aria-label="Évolution valeur portefeuille"></canvas>
+      </div>
     </div>
     <div class="card"><div id="history-list"><div class="empty">Aucune saisie pour l'instant.<br><small>Va dans "Saisie" pour commencer.</small></div></div></div>
-    <button class="btn-danger" style="width:100%;margin-top:0;" onclick="clearData()">🗑 Effacer toutes les données</button>
+    <button class="btndanger" onclick="clearData()">🗑 Effacer toutes les données</button>
   </div>
-  <div class="toast" id="toast"></div>
 
   <!-- PROJECTION -->
   <div class="page" id="tab-projection">
-    <div class="versement-row" style="margin-bottom:1rem;">
+    <div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #e8e8e3;border-radius:10px;padding:10px 14px;margin-bottom:1.25rem;">
       <span style="font-size:13px;color:#888;flex:1;">Versement/mois</span>
-      <input type="number" id="proj-versement" value="100" step="10" min="0" oninput="updateProjection()">
+      <input type="number" id="proj-versement" value="100" step="10" min="0" oninput="updateProj()">
       <span class="unit">€</span>
     </div>
     <div class="card" style="margin-bottom:1.25rem;">
-      <div class="proj-grid"><span>Durée</span><span style="text-align:right;">5%</span><span style="text-align:right;color:#1D9E75;">7%</span><span style="text-align:right;">9%</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:8px 14px;font-size:11px;font-weight:600;color:#888;background:#f9f9f7;border-bottom:1px solid #e8e8e3;">
+        <span>Durée</span><span style="text-align:right;">5%</span><span style="text-align:right;color:#1D9E75;">7%</span><span style="text-align:right;">9%</span>
+      </div>
       <div id="proj-rows"></div>
     </div>
     <div style="position:relative;height:220px;background:#fff;border-radius:14px;border:1px solid #e8e8e3;padding:12px;">
-      <canvas id="projChart" role="img" aria-label="Courbe de projection du portefeuille PEA sur 20 ans"></canvas>
+      <canvas id="projChart" role="img" aria-label="Projection portefeuille 20 ans"></canvas>
     </div>
-    <div class="legend"><span>- - 5% prudent</span><span style="color:#1D9E75;">—— 7% moyen</span><span>- - 9% optimiste</span></div>
+    <div class="legend"><span style="color:#aaa;">- - 5% prudent</span><span style="color:#1D9E75;">—— 7% moyen</span><span style="color:#5DCAA5;">- - 9% optimiste</span></div>
   </div>
+
+  <div class="toast" id="toast"></div>
 </div>
 
 <script>
-const ETF = [
-  { id:"world",  name:"Amundi MSCI World",       parts:11, pru:5.45,  valeur:62.04,  actif:true },
-  { id:"europe", name:"Easy Stoxx Europe 600",   parts:1,  pru:18.66, valeur:20.21,  actif:true },
-  { id:"em",     name:"Amundi Emergent ESG",      parts:1,  pru:29.36, valeur:32.55,  actif:true },
-  { id:"sp1",    name:"iShares S&P 500 Swap",     parts:4,  pru:5.62,  valeur:23.32,  actif:false },
-  { id:"sp2",    name:"Easy S&P 500",             parts:4,  pru:29.68, valeur:121.84, actif:false },
+const ETF_DEFAULT = [
+  {id:"world",  name:"Amundi MSCI World",     ticker:"DCAM.PA",  parts:11, pru:5.45,  valeur:62.04,  actif:true},
+  {id:"europe", name:"Easy Stoxx Europe 600", ticker:"ETZ.PA",   parts:1,  pru:18.66, valeur:20.21,  actif:true},
+  {id:"em",     name:"Amundi Emergent ESG",   ticker:"PAEEM.PA", parts:1,  pru:29.36, valeur:32.55,  actif:true},
+  {id:"sp1",    name:"iShares S&P 500 Swap",  ticker:"WPEA.PA",  parts:4,  pru:5.62,  valeur:23.32,  actif:false},
+  {id:"sp2",    name:"Easy S&P 500",          ticker:"ESE.PA",   parts:4,  pru:29.68, valeur:121.84, actif:false},
 ];
+const COLORS = ['#1D9E75','#3B82F6','#F59E0B','#94A3B8','#6366F1'];
 
-let history = JSON.parse(localStorage.getItem('pea_history') || '[]');
-let etfs = JSON.parse(localStorage.getItem('pea_etfs') || 'null') || ETF;
+let etfs, history, coursCache = {}, pieChart=null, histChart=null, projChart=null;
+try { etfs = JSON.parse(localStorage.getItem('pea_etfs')) || JSON.parse(JSON.stringify(ETF_DEFAULT)); } catch(e) { etfs = JSON.parse(JSON.stringify(ETF_DEFAULT)); }
+try { history = JSON.parse(localStorage.getItem('pea_history')) || []; } catch(e) { history = []; }
 
-function fmt(n) { return n.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-function fmtK(n) { return n >= 1000 ? (n/1000).toFixed(1)+'k' : Math.round(n)+''; }
+const save = () => { localStorage.setItem('pea_etfs', JSON.stringify(etfs)); localStorage.setItem('pea_history', JSON.stringify(history)); };
+const fmt = n => Number(n).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtK = n => n>=1000?(n/1000).toFixed(1)+'k':Math.round(n)+'';
 
-function showTab(name) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  event.target.classList.add('active');
+function showToast(msg, bg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.background = bg||'#1a1a1a';
+  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+function checkRappel() {
+  const now = new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+  const last = history.length ? history[history.length-1].label : null;
+  document.getElementById('rappel').style.display = last !== now ? 'block' : 'none';
+}
+
+function goTab(name, btn) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  if(btn) btn.classList.add('active');
   document.getElementById('tab-'+name).classList.add('active');
-  if (name === 'projection') { updateProjection(); drawChart(); }
-  if (name === 'historique') renderHistory();
-  if (name === 'accueil') renderAccueil();
-  if (name === 'saisie') renderSaisie();
+  if(name==='accueil') renderAccueil();
+  if(name==='cours') fetchCours();
+  if(name==='saisie') renderSaisie();
+  if(name==='historique') { renderHistory(); drawHistChart(); }
+  if(name==='projection') { updateProj(); drawProjChart(); }
 }
 
+// ---- ACCUEIL ----
 function renderAccueil() {
-  const totalVal = etfs.reduce((a,e) => a+e.valeur, 0);
-  const totalInvesti = 260 + history.reduce((a,h) => a+h.versement, 0);
+  const totalVal = etfs.reduce((a,e)=>a+e.valeur,0);
+  const totalInvesti = 260 + history.reduce((a,h)=>a+(h.versement||0),0);
   const pnl = totalVal - totalInvesti + 260;
-  const perf = ((totalVal / totalInvesti) - 1) * 100;
-  document.getElementById('m-investi').textContent = Math.round(totalInvesti) + ' €';
-  document.getElementById('m-valeur').textContent = fmt(totalVal) + ' €';
-  document.getElementById('m-pnl').textContent = (pnl>=0?'+':'') + fmt(pnl) + ' €';
-  document.getElementById('m-perf').textContent = (perf>=0?'+':'') + perf.toFixed(1) + ' %';
+  const perf = ((totalVal/totalInvesti)-1)*100;
 
-  const list = document.getElementById('etf-list');
-  list.innerHTML = etfs.map(e => {
-    const gain = ((e.valeur / (e.parts * e.pru)) - 1) * 100;
-    const badge = e.actif
-      ? '<span class="badge badge-green">actif</span>'
-      : '<span class="badge badge-gray">stop achat</span>';
-    return `<div class="etf-row">
-      <div>
-        <div class="etf-name">${e.name}</div>
-        <div class="etf-sub">${e.parts} parts · PRU ${e.pru} € ${badge}</div>
-      </div>
-      <div>
-        <div class="etf-val">${fmt(e.valeur)} €</div>
-        <div class="etf-gain" style="color:${gain>=0?'#1D9E75':'#E24B4A'}">${gain>=0?'+':''}${gain.toFixed(2)} %</div>
-      </div>
-    </div>`;
+  document.getElementById('m-investi').textContent = Math.round(totalInvesti)+' €';
+  document.getElementById('m-valeur').textContent = fmt(totalVal)+' €';
+  document.getElementById('m-valeur').className = 'metric-value green';
+
+  const pe = document.getElementById('m-pnl');
+  pe.textContent = (pnl>=0?'+':'')+fmt(pnl)+' €';
+  pe.className = 'metric-value '+(pnl>=0?'green':'red');
+
+  const pf = document.getElementById('m-perf');
+  pf.textContent = (perf>=0?'+':'')+perf.toFixed(1)+' %';
+  pf.className = 'metric-value '+(perf>=0?'green':'red');
+
+  document.getElementById('etf-list').innerHTML = etfs.map(e => {
+    const gain = ((e.valeur/(e.parts*e.pru))-1)*100;
+    const c = gain>=0?'#1D9E75':'#E24B4A';
+    const badge = e.actif?'<span class="badge badge-g">actif</span>':'<span class="badge badge-gray">stop achat</span>';
+    return `<div class="row">
+      <div><div style="font-size:13px;font-weight:500;">${e.name}</div>
+      <div style="font-size:11px;color:#888;margin-top:2px;">${e.parts} parts · PRU ${e.pru.toFixed(2)} € ${badge}</div></div>
+      <div style="text-align:right;">
+        <div style="font-size:14px;font-weight:600;">${fmt(e.valeur)} €</div>
+        <div style="font-size:11px;color:${c};">${gain>=0?'+':''}${gain.toFixed(2)} %</div>
+      </div></div>`;
   }).join('');
+
+  drawPieChart();
 }
 
+function drawPieChart() {
+  const total = etfs.reduce((a,e)=>a+e.valeur,0);
+  if(pieChart) pieChart.destroy();
+  pieChart = new Chart(document.getElementById('pieChart'), {
+    type:'doughnut',
+    data:{ labels:etfs.map(e=>e.name), datasets:[{data:etfs.map(e=>e.valeur), backgroundColor:COLORS, borderWidth:2, borderColor:'#fff'}] },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'65%',
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.raw)} € (${(ctx.raw/total*100).toFixed(1)}%)`}} } }
+  });
+  document.getElementById('pie-legend').innerHTML = etfs.map((e,i)=>
+    `<div class="pie-item"><div class="pie-dot" style="background:${COLORS[i]}"></div><span>${e.name.split(' ').slice(0,2).join(' ')} — ${(e.valeur/total*100).toFixed(0)}%</span></div>`
+  ).join('');
+}
+
+// ---- COURS ----
+async function fetchOneTicker(ticker) {
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=2d`;
+  const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+  const d = await r.json();
+  const meta = JSON.parse(d.contents).chart.result[0].meta;
+  return { price: meta.regularMarketPrice, prev: meta.chartPreviousClose };
+}
+
+async function fetchCours() {
+  document.getElementById('cours-list').innerHTML = '<div class="empty" style="padding:1rem;font-size:12px;">Chargement...</div>';
+  const results = [];
+  for(const e of etfs) {
+    try { const d = await fetchOneTicker(e.ticker); coursCache[e.id]=d; results.push({...e,...d,ok:true}); }
+    catch { const c=coursCache[e.id]; results.push({...e,price:c?.price||null,prev:c?.prev||null,ok:false}); }
+  }
+  document.getElementById('cours-list').innerHTML = results.map(r => {
+    if(!r.price) return `<div class="row"><div><div style="font-size:13px;font-weight:500;">${r.name}</div><div style="font-size:10px;color:#aaa;">${r.ticker}</div></div><div style="font-size:13px;color:#aaa;">N/A</div></div>`;
+    const ch = r.prev?((r.price-r.prev)/r.prev*100):0;
+    const c = ch>=0?'#1D9E75':'#E24B4A';
+    return `<div class="row">
+      <div><div style="font-size:13px;font-weight:500;">${r.name}${!r.ok?'<span style="color:#bbb;font-size:10px;margin-left:4px;">(cache)</span>':''}</div>
+      <div style="font-size:10px;color:#aaa;">${r.ticker}</div></div>
+      <div style="text-align:right;"><div style="font-size:14px;font-weight:600;">${r.price.toFixed(2)} €</div>
+      <div style="font-size:11px;color:${c};">${ch>=0?'+':''}${ch.toFixed(2)} %</div></div></div>`;
+  }).join('');
+  document.getElementById('cours-title').textContent = 'Cours — màj '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ---- SAISIE ----
 function renderSaisie() {
-  const now = new Date();
-  const label = now.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
-  document.getElementById('saisie-month').textContent = '📅 Saisie pour ' + label + ' — entre la valeur actuelle visible sur XTB.';
-  const container = document.getElementById('saisie-inputs');
-  container.innerHTML = etfs.map(e => `
-    <div class="saisie-row">
-      <span class="saisie-label">${e.name}</span>
-      <input type="number" step="0.01" placeholder="${fmt(e.valeur)}" id="in-${e.id}" min="0">
-      <span class="unit">€</span>
+  const label = new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+  document.getElementById('saisie-month').textContent = `📅 Saisie pour ${label} — entre les valeurs visibles sur XTB.`;
+  const hasLive = Object.keys(coursCache).length > 0;
+  const w = document.getElementById('saisie-warn');
+  w.style.display = hasLive ? 'block' : 'none';
+  if(hasLive) w.textContent = '💡 Cours disponibles — clique "Pré-remplir" pour les utiliser automatiquement.';
+
+  document.getElementById('saisie-inputs').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-bottom:1px solid #f0f0ec;">
+      <span style="font-size:12px;color:#888;">Valeur totale de chaque ETF (parts × cours)</span>
+      <button class="btn-live" onclick="prefill()">⚡ Pré-remplir</button>
     </div>
-  `).join('');
+    ${etfs.map(e=>`<div class="row">
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:500;">${e.name}</div>
+        <div style="font-size:10px;color:#aaa;">${e.parts} parts · PRU ${e.pru.toFixed(2)} €</div>
+      </div>
+      <input type="number" step="0.01" placeholder="${fmt(e.valeur)}" id="in-${e.id}" min="0">
+      <span class="unit" style="margin-left:4px;">€</span>
+    </div>`).join('')}`;
+}
+
+function prefill() {
+  let n = 0;
+  etfs.forEach(e => {
+    const c = coursCache[e.id];
+    if(c?.price) { const inp = document.getElementById('in-'+e.id); if(inp){inp.value=(c.price*e.parts).toFixed(2); n++;} }
+  });
+  n>0 ? showToast(`${n} ETF pré-remplis !`,`#1D9E75`) : showToast('Va dans "Cours" d\'abord',`#c0392b`);
 }
 
 function saveMonth() {
-  const updatedEtfs = etfs.map(e => {
-    const input = document.getElementById('in-'+e.id);
-    const val = input ? parseFloat(input.value) : NaN;
-    return { ...e, valeur: isNaN(val) ? e.valeur : val };
+  etfs = etfs.map(e => {
+    const inp = document.getElementById('in-'+e.id);
+    const v = inp ? parseFloat(inp.value) : NaN;
+    return (!isNaN(v) && v>0) ? {...e, valeur:v} : e;
   });
-  etfs = updatedEtfs;
-  localStorage.setItem('pea_etfs', JSON.stringify(etfs));
-
-  const versement = parseFloat(document.getElementById('in-versement').value) || 0;
-  const total = etfs.reduce((a,e) => a+e.valeur, 0);
-  const now = new Date();
-  const label = now.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
-  history.push({ label, versement, total, date: now.toISOString() });
-  localStorage.setItem('pea_history', JSON.stringify(history));
-
+  const versement = parseFloat(document.getElementById('in-versement').value)||0;
+  const notes = document.getElementById('in-notes').value.trim();
+  const total = etfs.reduce((a,e)=>a+e.valeur,0);
+  const label = new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+  const prevTotal = history.length ? history[history.length-1].total : total;
+  const perfMois = parseFloat(((total-prevTotal-versement)/prevTotal*100).toFixed(2));
+  history.push({label, versement, total, perfMois, notes, date:new Date().toISOString()});
+  save();
+  document.getElementById('in-notes').value='';
   const btn = document.getElementById('btn-save');
-  btn.textContent = '✓ Enregistré !';
-  btn.classList.add('success');
-  setTimeout(() => { btn.textContent = 'Enregistrer ce mois'; btn.classList.remove('success'); }, 2000);
-
-  showTab('historique');
-  document.querySelectorAll('.tab')[2].classList.add('active');
-  document.querySelectorAll('.tab')[1].classList.remove('active');
+  btn.textContent='✓ Enregistré !'; btn.classList.add('ok');
+  setTimeout(()=>{btn.textContent='Enregistrer ce mois';btn.classList.remove('ok');},2000);
+  checkRappel();
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===3));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-historique').classList.add('active');
+  renderHistory(); drawHistChart();
 }
 
+// ---- HISTORIQUE ----
 function renderHistory() {
   const el = document.getElementById('history-list');
-  if (history.length === 0) {
-    el.innerHTML = '<div class="empty">Aucune saisie pour l\'instant.<br><small>Va dans "Saisie" pour commencer.</small></div>';
-    return;
-  }
-  el.innerHTML = history.slice().reverse().map(h => `
-    <div class="hist-row">
-      <div>
-        <div class="hist-label">${h.label}</div>
-        <div class="hist-sub">Versé : ${h.versement} €</div>
-      </div>
-      <div>
-        <div class="hist-val">${fmt(h.total)} €</div>
-        <div class="hist-sub2">valeur totale</div>
-      </div>
-    </div>
-  `).join('');
-}
-
-function getProjection(versement, capital0=260) {
-  return Array.from({length:21},(_,y) => {
-    const row = { year: y===0?'Auj.':'An '+y };
-    [[0.05,'prudent'],[0.07,'moyen'],[0.09,'optimiste']].forEach(([r,k]) => {
-      let v = capital0;
-      for (let m=0; m<y*12; m++) v = v*(1+r/12)+versement;
-      row[k] = Math.round(v);
-    });
-    return row;
-  });
-}
-
-function updateProjection() {
-  const v = parseFloat(document.getElementById('proj-versement').value) || 100;
-  const data = getProjection(v);
-  const rows = document.getElementById('proj-rows');
-  rows.innerHTML = [5,10,15,20].map(y => {
-    const r = data[y];
-    return `<div class="proj-row">
-      <span style="color:#888;">${y} ans</span>
-      <span style="text-align:right;">${fmtK(r.prudent)} €</span>
-      <span style="text-align:right;font-weight:600;color:#1D9E75;">${fmtK(r.moyen)} €</span>
-      <span style="text-align:right;">${fmtK(r.optimiste)} €</span>
+  if(!history.length){el.innerHTML='<div class="empty">Aucune saisie pour l\'instant.<br><small>Va dans "Saisie" pour commencer.</small></div>';return;}
+  el.innerHTML = history.slice().reverse().map((h,ri)=>{
+    const i = history.length-1-ri;
+    const pc = h.perfMois!=null?`<div style="font-size:11px;color:${h.perfMois>=0?'#1D9E75':'#E24B4A'};text-align:right;">${h.perfMois>=0?'+':''}${h.perfMois}%</div>`:'';
+    const notes = h.notes?`<div style="font-size:10px;color:#aaa;margin-top:2px;">📝 ${h.notes}</div>`:'';
+    return `<div class="row">
+      <div style="flex:1;"><div style="font-size:13px;font-weight:500;">${h.label}</div>
+      <div style="font-size:11px;color:#888;">Versé : ${h.versement} €${notes}</div></div>
+      <div style="text-align:right;"><div style="font-size:14px;font-weight:600;">${fmt(h.total)} €</div>${pc}</div>
+      <button class="del-btn" onclick="delEntry(${i})">✕</button>
     </div>`;
   }).join('');
 }
 
-let projChart = null;
-function drawChart() {
-  const v = parseFloat(document.getElementById('proj-versement').value) || 100;
-  const data = getProjection(v);
-  const labels = data.map(d => d.year);
-  if (projChart) projChart.destroy();
-  projChart = new Chart(document.getElementById('projChart'), {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        { label: '5% prudent', data: data.map(d=>d.prudent), borderColor:'#aaa', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[4,4] },
-        { label: '7% moyen',   data: data.map(d=>d.moyen),   borderColor:'#1D9E75', borderWidth:2, pointRadius:0, fill:false },
-        { label: '9% optimiste', data: data.map(d=>d.optimiste), borderColor:'#5DCAA5', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[2,3] },
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { ticks: { font:{size:10}, maxTicksLimit:6, autoSkip:true }, grid: { display:false } },
-        y: { ticks: { font:{size:10}, callback: v => fmtK(v)+'€' }, grid: { color:'rgba(0,0,0,0.05)' } }
-      }
-    }
+function delEntry(i) {
+  if(!confirm('Supprimer cette saisie ?')) return;
+  history.splice(i,1); save(); renderHistory(); drawHistChart(); renderAccueil(); checkRappel();
+  showToast('Saisie supprimée');
+}
+
+function drawHistChart() {
+  const container = document.getElementById('hist-chart-container');
+  if(history.length < 2) { container.innerHTML='<div style="padding:1rem;text-align:center;font-size:12px;color:#aaa;">Pas encore assez de données (min. 2 mois)</div>'; return; }
+  container.innerHTML='<canvas id="histChart" role="img" aria-label="Évolution valeur portefeuille"></canvas>';
+  if(histChart) { try{histChart.destroy();}catch(e){} }
+  const labels = history.map(h=>h.label.slice(0,3)+' '+h.label.slice(-2));
+  const vals = history.map(h=>h.total);
+  const inv = history.map((_,i)=>260+history.slice(0,i+1).reduce((a,x)=>a+(x.versement||0),0));
+  histChart = new Chart(document.getElementById('histChart'), {
+    type:'line',
+    data:{ labels, datasets:[
+      {label:'Valeur', data:vals, borderColor:'#1D9E75', borderWidth:2, pointRadius:3, pointBackgroundColor:'#1D9E75', fill:false},
+      {label:'Investi', data:inv, borderColor:'#ddd', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[4,3]}
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{ x:{ticks:{font:{size:9},maxRotation:45},grid:{display:false}}, y:{ticks:{font:{size:10},callback:v=>fmtK(v)+'€'},grid:{color:'rgba(0,0,0,0.04)'}} } }
   });
 }
 
-function showToast(msg, color) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.style.background = color || '#1a1a1a';
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
+// ---- PROJECTION ----
+function getProj(v, c0=260) {
+  return Array.from({length:21},(_,y)=>{
+    const r={year:y===0?'Auj.':'An '+y};
+    [[0.05,'p'],[0.07,'m'],[0.09,'o']].forEach(([rate,k])=>{let x=c0;for(let i=0;i<y*12;i++)x=x*(1+rate/12)+v;r[k]=Math.round(x);});
+    return r;
+  });
 }
 
+function updateProj() {
+  const v = parseFloat(document.getElementById('proj-versement').value)||100;
+  const data = getProj(v);
+  document.getElementById('proj-rows').innerHTML = [5,10,15,20].map(y=>{
+    const r=data[y];
+    return `<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:9px 14px;border-bottom:1px solid #f0f0ec;font-size:13px;">
+      <span style="color:#888;">${y} ans</span>
+      <span style="text-align:right;">${fmtK(r.p)} €</span>
+      <span style="text-align:right;font-weight:600;color:#1D9E75;">${fmtK(r.m)} €</span>
+      <span style="text-align:right;">${fmtK(r.o)} €</span>
+    </div>`;
+  }).join('');
+}
+
+function drawProjChart() {
+  const v = parseFloat(document.getElementById('proj-versement').value)||100;
+  const data = getProj(v);
+  if(projChart) projChart.destroy();
+  projChart = new Chart(document.getElementById('projChart'), {
+    type:'line',
+    data:{ labels:data.map(d=>d.year), datasets:[
+      {label:'5%', data:data.map(d=>d.p), borderColor:'#aaa', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[4,4]},
+      {label:'7%', data:data.map(d=>d.m), borderColor:'#1D9E75', borderWidth:2, pointRadius:0, fill:false},
+      {label:'9%', data:data.map(d=>d.o), borderColor:'#5DCAA5', borderWidth:1.5, pointRadius:0, fill:false, borderDash:[2,3]},
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{ x:{ticks:{font:{size:10},maxTicksLimit:6,autoSkip:true},grid:{display:false}}, y:{ticks:{font:{size:10},callback:v=>fmtK(v)+'€'},grid:{color:'rgba(0,0,0,0.05)'}} } }
+  });
+}
+
+// ---- EXPORT/IMPORT ----
 function exportData() {
-  const data = { history, etfs, exportedAt: new Date().toISOString() };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'pea_tracker_' + new Date().toISOString().slice(0,10) + '.json';
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast('Export telecharge !');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify({history,etfs,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'}));
+  a.download='pea_tracker_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click(); showToast('Export téléchargé !');
 }
-
-function toggleImport() {
-  const area = document.getElementById('import-area');
-  area.style.display = area.style.display === 'block' ? 'none' : 'block';
-}
-
+function toggleImport() { const el=document.getElementById('import-area'); el.style.display=el.style.display==='block'?'none':'block'; }
 function importData() {
-  const text = document.getElementById('import-text').value.trim();
   try {
-    const data = JSON.parse(text);
-    if (!data.history || !data.etfs) throw new Error('Format invalide');
-    history = data.history;
-    etfs = data.etfs;
-    localStorage.setItem('pea_history', JSON.stringify(history));
-    localStorage.setItem('pea_etfs', JSON.stringify(etfs));
-    document.getElementById('import-text').value = '';
-    document.getElementById('import-area').style.display = 'none';
-    renderHistory();
-    renderAccueil();
-    showToast('Donnees importees !', '#1D9E75');
-  } catch(e) {
-    showToast('JSON invalide, verifie le fichier', '#c0392b');
-  }
+    const d=JSON.parse(document.getElementById('import-text').value.trim());
+    if(!d.history||!d.etfs) throw 0;
+    history=d.history; etfs=d.etfs; save();
+    document.getElementById('import-text').value=''; document.getElementById('import-area').style.display='none';
+    renderHistory(); drawHistChart(); renderAccueil(); checkRappel();
+    showToast('Données importées !','#1D9E75');
+  } catch { showToast('JSON invalide','#c0392b'); }
 }
-
 function clearData() {
-  if (!confirm('Effacer tout l historique ? Cette action est irreversible.')) return;
-  history = [];
-  etfs = JSON.parse(JSON.stringify(ETF));
-  localStorage.removeItem('pea_history');
-  localStorage.removeItem('pea_etfs');
-  renderHistory();
-  renderAccueil();
-  showToast('Donnees effacees');
+  if(!confirm('Effacer tout l\'historique ? Irréversible.')) return;
+  history=[]; etfs=JSON.parse(JSON.stringify(ETF_DEFAULT)); save();
+  renderHistory(); drawHistChart(); renderAccueil(); checkRappel();
+  showToast('Données effacées');
 }
 
+// ---- INIT ----
+checkRappel();
 renderAccueil();
 renderSaisie();
+updateProj();
 </script>
 </body>
 </html>
